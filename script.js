@@ -545,12 +545,32 @@
 
                 // Empty State
                 if (this.cart.length === 0) {
+                    // Vorschläge generieren (erste 3 Produkte)
+                    const suggestions = products.slice(0, 3).map(p => `
+                        <div class="product-card" style="border: 1px solid #eee; box-shadow: none; animation: none; opacity: 1;">
+                            <div class="product-img" style="height: 150px;" onclick="app.showProductDetails(${p.id})">
+                                <img src="${p.image}" alt="${p.name}">
+                            </div>
+                            <div class="product-details" style="padding: 1rem;">
+                                <h4 style="margin: 0 0 0.5rem; font-size: 1rem;">${p.name}</h4>
+                                <div style="color: var(--primary-color); font-weight: bold; margin-bottom: 0.5rem;">${this.formatPrice(p.price)}</div>
+                                <button onclick="app.addToCart(${p.id})" style="font-size: 0.8rem; padding: 0.5rem;">Hinzufügen</button>
+                            </div>
+                        </div>
+                    `).join('');
+
                     cartItemsContainer.innerHTML = `
                         <div class="cart-empty-state">
                             <div class="cart-empty-icon">🛒</div>
                             <h3>Dein Warenkorb ist leer</h3>
                             <p style="color: #666; margin-bottom: 1.5rem;">Sieht aus, als hättest du noch keine Leckereien gefunden.</p>
                             <button onclick="app.navigate('shop')">Jetzt stöbern</button>
+                        </div>
+                        <div class="cart-suggestions">
+                            <h3 style="color: #666; font-size: 1.2rem; margin-bottom: 1.5rem;">Das könnte dir schmecken:</h3>
+                            <div class="product-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
+                                ${suggestions}
+                            </div>
                         </div>
                     `;
                     if(cartSummaryContainer) cartSummaryContainer.style.display = 'none';

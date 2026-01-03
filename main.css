@@ -22,6 +22,16 @@
             overflow-x: hidden;
         }
 
+        /* Announcement Bar */
+        .announcement-bar {
+            background: var(--accent-color);
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
         /* Header & Nav */
         header {
             background-color: rgba(255, 255, 255, 0.9);
@@ -521,6 +531,13 @@
             display: block;
             opacity: 0.8;
             animation: float 3s ease-in-out infinite;
+        }
+        
+        .cart-suggestions {
+            margin-top: 3rem;
+            text-align: left;
+            border-top: 1px solid #eee;
+            padding-top: 2rem;
         }
 
         /* Footer */
