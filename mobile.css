@@ -16,6 +16,15 @@
         position: relative;
     }
 
+    .header-controls {
+        gap: 12px;
+    }
+
+    .logo img {
+        width: 90px;
+        height: auto;
+    }
+
     /* Hamburger Menu */
     .hamburger {
         display: flex;
@@ -102,22 +111,23 @@
     }
 
     .category-filters {
-        display: none;
-        flex-wrap: nowrap; /* Horizontales Scrollen ermöglichen */
-        justify-content: flex-start;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-x: contain;
-        padding-bottom: 0.5rem;
-        /* Fade-Out Effekt rechts */
-        mask-image: linear-gradient(to right, black 90%, transparent 100%);
-        -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
-        
-        /* Scrollbar verstecken */
-        scrollbar-width: none;
-        -ms-overflow-style: none;
+        flex-wrap: wrap;
+        overflow-y: hidden;
+        overflow-x: visible;
+        max-height: 45px; /* Zeigt nur die erste Zeile */
+        transition: max-height 0.3s ease-in-out;
+        padding-bottom: 0;
+        mask-image: none;
+        -webkit-mask-image: none;
     }
-    .category-filters::-webkit-scrollbar { display: none; }
+
+    .category-filters.expanded {
+        max-height: 500px; /* Genug Platz für alle Kategorien */
+    }
+
+    .filter-toggle {
+        display: flex; /* Mobile: sichtbar */
+    }
 
     .category-btn {
         flex-shrink: 0;
@@ -219,5 +229,15 @@
         width: 100%;
         justify-content: center;
         box-sizing: border-box;
+    }
+
+    /* Product Detail Mobile */
+    .product-detail-wrapper {
+        grid-template-columns: 1fr;
+        padding: 1.5rem;
+        gap: 1.5rem;
+    }
+    .detail-content h1 {
+        font-size: 2rem;
     }
 }

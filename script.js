@@ -1,15 +1,42 @@
         // --- KONFIGURATION & DATEN ---
         const config = {
-            currency: '€',
-            locale: 'de-DE'
+            // Währungs-Konfiguration (Basis: EUR)
+            currencyRates: {
+                'DE': { code: 'EUR', symbol: '€', rate: 1 },
+                'AT': { code: 'EUR', symbol: '€', rate: 1 },
+                'CH': { code: 'CHF', symbol: 'CHF', rate: 0.96 }, // Beispielkurs
+                'default': { code: 'EUR', symbol: '€', rate: 1 }
+            },
+            // Lokalisierte Texte pro Land
+            locales: {
+                'DE': {
+                    heroTitle: "Süße Träume werden wahr",
+                    heroText: "Entdecke handgemachte Bonbons, feinste Schokolade und die besten Leckereien der Welt.",
+                    cartTitle: "Dein Warenkorb 🛒"
+                },
+                'AT': {
+                    heroTitle: "Feine Schmankerl für dich",
+                    heroText: "Entdecke handgemachte Zuckerl, feinste Schokolade und die besten Naschereien aus aller Welt.",
+                    cartTitle: "Dein Einkaufskorb 🛒"
+                },
+                'CH': {
+                    heroTitle: "Süsses für Geniesser",
+                    heroText: "Entdecke handgemachte Bonbons, feinste Schoggi und die besten Leckereien.",
+                    cartTitle: "Din Warenkorb 🛒"
+                }
+            }
         };
 
         // --- APP LOGIK ---
         const app = {
             cart: [],
             currentStep: 1,
+            currentProductId: null,
+            discount: null, // Aktueller Rabatt
+            selectedCountry: 'DE',
             favorites: [],
             lastOrderId: null,
+            lastOrder: null, // Speichert Details für Rechnung
             trackingInterval: null,
             filterState: {
                 category: 'Alle',
@@ -52,6 +79,19 @@
                 this.initAddressAutocomplete();
                 this.initStreetAutocomplete();
                 this.renderCategories();
+                
+                // Setze Standardland beim Start
+                this.setCountry(this.selectedCountry);
+            },
+
+            getCurrency() {
+                return config.currencyRates[this.selectedCountry] || config.currencyRates['default'];
+            },
+
+            formatPrice(amount) {
+                const currency = this.getCurrency();
+                const converted = amount * currency.rate;
+                return `${converted.toFixed(2)} ${currency.symbol}`;
             },
 
             initAddressAutocomplete() {
@@ -198,6 +238,18 @@
                 ).join('');
             },
 
+            toggleFilterView() {
+                const container = document.getElementById('category-filters');
+                const btn = document.querySelector('.filter-toggle');
+                container.classList.toggle('expanded');
+                
+                if (container.classList.contains('expanded')) {
+                    btn.style.transform = 'rotate(180deg)';
+                } else {
+                    btn.style.transform = 'rotate(0deg)';
+                }
+            },
+
             filterCategory(category) {
                 this.filterState.category = category;
                 this.applyFilters();
@@ -241,6 +293,31 @@
                 this.renderProducts(list);
             },
 
+            setCountry(country) {
+                this.selectedCountry = country;
+                
+                // 1. Texte aktualisieren (Lokalisierung)
+                const texts = config.locales[country] || config.locales['DE'];
+                const heroTitle = document.getElementById('hero-title');
+                const heroText = document.getElementById('hero-text');
+                const cartTitle = document.getElementById('cart-section-title');
+                
+                if(heroTitle) heroTitle.innerText = texts.heroTitle;
+                if(heroText) heroText.innerText = texts.heroText;
+                if(cartTitle) cartTitle.innerText = texts.cartTitle;
+
+                // 2. Alle Auswahlfelder synchronisieren
+                const selects = ['header-country-select', 'cart-country', 'input-country'];
+                selects.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.value = country;
+                });
+
+                // 3. Preise und UI aktualisieren
+                this.updateCartUI();
+                this.renderProducts(); // Shop-Preise aktualisieren
+            },
+
             updateFilterUI() {
                 document.querySelectorAll('.category-btn').forEach(btn => {
                     btn.classList.toggle('active', btn.innerText === this.filterState.category);
@@ -253,20 +330,28 @@
 
                 const createCard = (p, index, context) => {
                     const isFav = this.favorites.includes(p.id);
+                    // Sale Logic
+                    const isSale = p.originalPrice && p.originalPrice > p.price;
+                    const savings = isSale ? Math.round((1 - p.price / p.originalPrice) * 100) : 0;
+                    
                     return `
                 <div class="product-card" style="animation-delay: ${index * 100}ms">
+                    ${isSale ? `<div class="sale-badge">-${savings}%</div>` : ''}
                     <button class="fav-btn ${isFav ? 'active' : ''}" onclick="app.toggleFavorite(${p.id})">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                         </svg>
                     </button>
-                    <div class="product-img">
+                    <div class="product-img" onclick="app.showProductDetails(${p.id})" style="cursor: pointer;">
                         <img src="${p.image}" alt="${p.name}">
                     </div>
                     <div class="product-details">
-                        <h3 class="product-title">${p.name}</h3>
+                        <h3 class="product-title" onclick="app.showProductDetails(${p.id})" style="cursor: pointer;">${p.name}</h3>
                         <p class="product-desc">${p.description}</p>
-                        <div class="product-price">${p.price.toFixed(2)} ${config.currency}</div>
+                        <div class="product-price">
+                            ${isSale ? `<span class="old-price">${this.formatPrice(p.originalPrice)}</span>` : ''}
+                            ${this.formatPrice(p.price)}
+                        </div>
                         
                         <div style="margin-bottom: 1rem; display: flex; align-items: center;">
                             <label style="margin-right: 0.5rem; font-size: 0.9rem; color: #666;">Menge:</label>
@@ -291,6 +376,51 @@
                 featuredContainer.innerHTML = products.slice(0, 2).map((p, i) => createCard(p, i, 'feat')).join('');
             },
 
+            showProductDetails(id) {
+                const p = products.find(x => x.id === id);
+                if(!p) return;
+                
+                this.currentProductId = id;
+                
+                document.getElementById('detail-img').src = p.image;
+                document.getElementById('detail-category').innerText = p.category;
+                document.getElementById('detail-title').innerText = p.name;
+                
+                const isSale = p.originalPrice && p.originalPrice > p.price;
+                document.getElementById('detail-price').innerHTML = (isSale ? `<span class="old-price" style="font-size: 1.5rem;">${this.formatPrice(p.originalPrice)}</span> ` : '') + this.formatPrice(p.price);
+                
+                document.getElementById('detail-desc').innerText = p.description;
+                
+                // Fav Btn Logic
+                const favBtn = document.getElementById('detail-fav-btn');
+                const isFav = this.favorites.includes(id);
+                favBtn.className = `fav-btn ${isFav ? 'active' : ''}`;
+                favBtn.onclick = () => {
+                    this.toggleFavorite(id);
+                    const newFav = this.favorites.includes(id);
+                    favBtn.className = `fav-btn ${newFav ? 'active' : ''}`;
+                };
+                
+                // Controls
+                const controls = document.querySelector('.detail-controls');
+                controls.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <label style="font-weight: bold;">Menge:</label>
+                        <div class="qty-selector" style="background: #f3f4f6; padding: 5px; border-radius: 12px;">
+                            <button onclick="app.adjustDetailQty(-1)" style="width: 40px; height: 40px; font-size: 1.2rem;">-</button>
+                            <input type="number" id="detail-qty-input" value="1" min="1" style="width: 50px; text-align: center; border: none; background: transparent; font-size: 1.2rem; font-weight: bold; margin: 0;">
+                            <button onclick="app.adjustDetailQty(1)" style="width: 40px; height: 40px; font-size: 1.2rem;">+</button>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <button onclick="app.addToCartFromDetail()" class="checkout-btn-large">In den Warenkorb</button>
+                        <button onclick="app.buyNowFromDetail()" class="checkout-btn-large secondary">Direkt kaufen</button>
+                    </div>
+                `;
+                
+                this.navigate('product-detail');
+            },
+
             toggleFavorite(id) {
                 const index = this.favorites.indexOf(id);
                 if (index === -1) {
@@ -313,12 +443,34 @@
                 }
             },
 
-            addToCart(id, context = 'list') {
+            adjustDetailQty(delta) {
+                const input = document.getElementById('detail-qty-input');
+                if(input) {
+                    let val = parseInt(input.value) + delta;
+                    if(val < 1) val = 1;
+                    input.value = val;
+                }
+            },
+
+            addToCartFromDetail() {
+                const qty = parseInt(document.getElementById('detail-qty-input').value) || 1;
+                this.addToCart(this.currentProductId, null, qty);
+            },
+
+            buyNowFromDetail() {
+                this.addToCartFromDetail();
+                this.checkout();
+            },
+
+            addToCart(id, context = 'list', explicitQty = null) {
                 const product = products.find(p => p.id === id);
                 const existing = this.cart.find(item => item.id === id);
 
-                const qtyInput = document.getElementById(`qty-${id}-${context}`);
-                let qty = qtyInput ? parseInt(qtyInput.value) : 1;
+                let qty = explicitQty;
+                if (qty === null) {
+                    const qtyInput = document.getElementById(`qty-${id}-${context}`);
+                    qty = qtyInput ? parseInt(qtyInput.value) : 1;
+                }
                 if (isNaN(qty) || qty < 1) qty = 1;
 
                 if (existing) {
@@ -359,12 +511,32 @@
                 this.updateCartUI();
             },
 
+            applyDiscount() {
+                const input = document.getElementById('discount-code');
+                const code = input.value.trim().toUpperCase();
+                
+                if (discountCodes[code]) {
+                    this.discount = { code: code, ...discountCodes[code] };
+                    this.showToast(`Gutschein ${code} angewendet! 🎉`);
+                    input.value = '';
+                    this.updateCartUI();
+                } else {
+                    this.showToast("Ungültiger Gutscheincode", "error");
+                    this.discount = null;
+                }
+            },
+
             updateCartUI() {
                 const cartItemsContainer = document.getElementById('cart-items-container');
                 const cartSummaryContainer = document.getElementById('cart-summary-container');
                 const countBadge = document.getElementById('cart-count');
                 const subtotalEl = document.getElementById('cart-subtotal');
                 const totalEl = document.getElementById('cart-total-display');
+                const shippingEl = document.getElementById('cart-shipping');
+                const discountRow = document.getElementById('cart-discount-row');
+                const discountAmountEl = document.getElementById('cart-discount-amount');
+                const taxEl = document.getElementById('cart-tax');
+                const countrySelect = document.getElementById('cart-country');
 
                 // Update Count
                 const totalQty = this.cart.reduce((sum, item) => sum + item.qty, 0);
@@ -399,7 +571,7 @@
                             <img src="${item.image}" alt="${item.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 12px;">
                             <div>
                                 <strong style="font-size: 1.1rem;">${item.name}</strong><br>
-                                <small style="color: #666;">${item.price.toFixed(2)} ${config.currency} / Stück</small>
+                                <small style="color: #666;">${this.formatPrice(item.price)} / Stück</small>
                             </div>
                         </div>
                         <div class="cart-controls">
@@ -409,7 +581,7 @@
                                 <button onclick="app.updateCartQty(${item.id}, 1)">+</button>
                             </div>
                             <div class="item-total">
-                                <span>${itemTotal.toFixed(2)} ${config.currency}</span>
+                                <span>${this.formatPrice(itemTotal)}</span>
                             </div>
                             <button class="remove-btn" onclick="app.removeFromCart(${item.id})" title="Entfernen">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
@@ -419,8 +591,40 @@
                 `;
                 }).join('');
 
-                if(subtotalEl) subtotalEl.innerText = `${total.toFixed(2)} ${config.currency}`;
-                if(totalEl) totalEl.innerText = `${total.toFixed(2)} ${config.currency}`;
+                // Update Cart Summary with Shipping
+                if (countrySelect) countrySelect.value = this.selectedCountry;
+                const shipping = getShippingCost(this.selectedCountry);
+                
+                // Discount Calculation
+                this.cartTotalBeforeDiscount = total; // Für Steuerberechnung speichern
+                let discountVal = 0;
+                if (this.discount) {
+                    if (this.discount.type === 'percent') {
+                        discountVal = total * this.discount.value;
+                    } else {
+                        discountVal = this.discount.value;
+                    }
+                    if (discountVal > total) discountVal = total; // Nicht negativ werden
+                }
+                this.discountAmount = discountVal;
+
+                const totalAfterDiscount = total - discountVal;
+                const totalGross = totalAfterDiscount + shipping;
+                
+                // Steuerberechnung mit globaler Funktion
+                let discountRatio = 0;
+                if (this.discount && this.cartTotalBeforeDiscount > 0) {
+                    discountRatio = this.discountAmount / this.cartTotalBeforeDiscount;
+                }
+                const taxAmount = calculateTax(this.selectedCountry, this.cart, shipping, discountRatio);
+
+                if (discountRow) discountRow.style.display = discountVal > 0 ? 'flex' : 'none';
+                if (discountAmountEl) discountAmountEl.innerText = `-${this.formatPrice(discountVal)}`;
+
+                if(shippingEl) shippingEl.innerText = `${this.formatPrice(shipping)}`;
+                if(taxEl) taxEl.innerText = `${this.formatPrice(taxAmount)}`;
+                if(subtotalEl) subtotalEl.innerText = `${this.formatPrice(total)}`;
+                if(totalEl) totalEl.innerText = `${this.formatPrice(totalGross)}`;
             },
 
             saveCart() {
@@ -434,6 +638,11 @@
                     return;
                 }
                 this.currentStep = 1;
+                
+                // Sync country to wizard
+                const wizardCountry = document.getElementById('input-country');
+                if(wizardCountry) wizardCountry.value = this.selectedCountry;
+
                 this.updateWizardUI();
                 this.navigate('checkout');
             },
@@ -499,39 +708,65 @@
                 let total = 0;
                 let subtotal = 0;
                 
-                // Versandkosten berechnen
-                const country = countrySelect ? countrySelect.value : 'DE';
-                let shipping = 0;
-                let shippingLabel = "Versand";
-
-                if (country === 'DE') { shipping = 4.99; shippingLabel = "Versand (DE)"; }
-                else if (country === 'AT') { shipping = 9.99; shippingLabel = "Versand (AT)"; }
-                else if (country === 'CH') { shipping = 14.99; shippingLabel = "Versand (CH)"; }
-                else { shipping = 19.99; shippingLabel = "Versand (International)"; }
-
+                // 1. Zuerst Zwischensumme berechnen (FIX für Preis-Bug)
                 let itemsHtml = this.cart.map(item => {
                     const sum = item.price * item.qty;
                     subtotal += sum;
                     return `<div style="display:flex; justify-content:space-between; margin-bottom:0.8rem; color:#555; font-size: 1.1rem; border-bottom: 1px dashed #ddd; padding-bottom: 0.5rem;">
                         <span><strong>${item.qty}x</strong> ${item.name}</span>
-                        <span><strong>${sum.toFixed(2)} ${config.currency}</strong></span>
+                        <span><strong>${this.formatPrice(sum)}</strong></span>
                     </div>`;
                 }).join('');
+
+                // Versandkosten berechnen
+                const country = countrySelect ? countrySelect.value : 'DE';
+                const shipping = getShippingCost(country);
+                const shippingLabel = `Versand (${country})`;
                 
-                total = subtotal + shipping;
+                // Discount Logic for Wizard
+                let discountVal = 0;
+                if (this.discount) {
+                    if (this.discount.type === 'percent') {
+                        discountVal = subtotal * this.discount.value;
+                    } else {
+                        discountVal = this.discount.value;
+                    }
+                    if (discountVal > subtotal) discountVal = subtotal;
+                }
+                const totalAfterDiscount = subtotal - discountVal;
+                const totalGross = totalAfterDiscount + shipping;
+
+                // Steuer neu berechnen (mit Kontext aus Cart-Update)
+                this.cartTotalBeforeDiscount = subtotal;
+                this.discountAmount = discountVal;
+                
+                let discountRatio = 0;
+                if (this.discount && this.cartTotalBeforeDiscount > 0) {
+                    discountRatio = this.discountAmount / this.cartTotalBeforeDiscount;
+                }
+                const taxAmount = calculateTax(country, this.cart, shipping, discountRatio);
 
                 summary.innerHTML = itemsHtml + `
                     <div style="display:flex; justify-content:space-between; margin-top:1rem; padding-top:0.5rem; color:#444; font-weight:500;">
                         <span>Zwischensumme</span>
-                        <span>${subtotal.toFixed(2)} ${config.currency}</span>
+                        <span>${this.formatPrice(subtotal)}</span>
                     </div>
+                    ${discountVal > 0 ? `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; color:var(--accent-color); font-weight:bold;">
+                        <span>Rabatt (${this.discount.code})</span>
+                        <span>-${this.formatPrice(discountVal)}</span>
+                    </div>` : ''}
                     <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; color:#444; font-weight:500;">
                         <span>${shippingLabel}</span>
-                        <span>${shipping.toFixed(2)} ${config.currency}</span>
+                        <span>${this.formatPrice(shipping)}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; color:#666; font-size: 0.9rem;">
+                        <span>Enth. MwSt.</span>
+                        <span>${this.formatPrice(taxAmount)}</span>
                     </div>
                 `;
 
-                totalEl.innerText = `Gesamt: ${total.toFixed(2)} ${config.currency}`;
+                totalEl.innerText = `Gesamt: ${this.formatPrice(totalGross)}`;
             },
 
             placeOrder() {
@@ -546,6 +781,25 @@
                     const orderId = 'ORD-' + Date.now().toString().slice(-6);
                     this.lastOrderId = orderId;
                     document.getElementById('order-id').innerText = orderId;
+
+                    // Bestelldaten für Rechnung sichern (bevor Cart geleert wird)
+                    const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                    const shipping = getShippingCost(this.selectedCountry);
+                    let discountVal = 0;
+                    if (this.discount) {
+                        discountVal = this.discount.type === 'percent' ? subtotal * this.discount.value : this.discount.value;
+                        if (discountVal > subtotal) discountVal = subtotal;
+                    }
+                    
+                    this.lastOrder = {
+                        id: orderId,
+                        date: new Date().toLocaleDateString('de-DE'),
+                        items: [...this.cart],
+                        subtotal: subtotal,
+                        shipping: shipping,
+                        discountVal: discountVal,
+                        total: subtotal - discountVal + shipping
+                    };
                     
                     this.cart = [];
                     this.saveCart();
@@ -559,6 +813,147 @@
                     btn.disabled = false;
                     btn.innerText = originalText;
                 }, 2000);
+            },
+
+            downloadInvoice() {
+                if (!this.lastOrder) {
+                    this.showToast("Keine Rechnungsdaten verfügbar.", "error");
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const o = this.lastOrder;
+                
+                // Logo Image Element (aus dem DOM)
+                const logoImg = document.querySelector('.logo img');
+
+                // Farben definieren
+                const primaryColor = [74, 4, 78]; // #4a044e
+                const accentColor = [219, 39, 119]; // #db2777
+
+                // --- Header ---
+                // Hintergrundbalken
+                doc.setFillColor(...primaryColor);
+                doc.rect(0, 0, 210, 40, 'F');
+
+                // Logo einfügen (falls geladen)
+                if (logoImg && logoImg.complete && logoImg.naturalHeight !== 0) {
+                    try {
+                        doc.addImage(logoImg, 'JPEG', 15, 5, 30, 30);
+                    } catch (e) {
+                        console.warn("Logo konnte nicht ins PDF eingefügt werden:", e);
+                    }
+                }
+
+                // Titel
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(22);
+                doc.setTextColor(255, 255, 255);
+                doc.text("RECHNUNG", 150, 28);
+
+                // --- Info Sektion ---
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+
+                let y = 60;
+                
+                // Links: Firmenadresse
+                doc.setFont("helvetica", "bold");
+                doc.text("Candyocean GmbH", 15, y); y += 5;
+                doc.setFont("helvetica", "normal");
+                doc.text("Zuckerstraße 1", 15, y); y += 5;
+                doc.text("12345 Süßstadt", 15, y); y += 5;
+                doc.text("Deutschland", 15, y); y += 5;
+                doc.text("info@candyocean.de", 15, y);
+
+                // Rechts: Bestelldaten
+                y = 60;
+                const rightColX = 130;
+                doc.text("Bestellnummer:", rightColX, y); 
+                doc.text(o.id, rightColX + 35, y); y += 6;
+                
+                doc.text("Datum:", rightColX, y); 
+                doc.text(o.date, rightColX + 35, y); y += 6;
+                
+                // --- Artikel Tabelle ---
+                y = 95;
+                
+                // Tabellenkopf
+                doc.setFillColor(240, 240, 240);
+                doc.rect(15, y - 8, 180, 10, 'F');
+                doc.setFont("helvetica", "bold");
+                doc.text("Artikel", 20, 45);
+                doc.text("Preis", 160, 45);
+                doc.text("Artikel", 20, y);
+                doc.text("Menge", 110, y);
+                doc.text("Einzelpreis", 135, y);
+                doc.text("Gesamt", 170, y);
+                
+                y += 10;
+                doc.setFont("helvetica", "normal");
+
+                o.items.forEach((item, i) => {
+                    const itemTotal = item.price * item.qty;
+                    
+                    // Zebra-Streifen
+                    if (i % 2 === 1) {
+                        doc.setFillColor(250, 250, 250);
+                        doc.rect(15, y - 6, 180, 8, 'F');
+                    }
+
+                    doc.text(item.name, 20, y);
+                    doc.text(String(item.qty), 115, y);
+                    doc.text(this.formatPrice(item.price), 135, y);
+                    doc.text(this.formatPrice(itemTotal), 170, y);
+                    
+                    y += 8;
+                });
+
+                // Trennlinie
+                doc.setDrawColor(200, 200, 200);
+                doc.line(20, y, 190, y);
+                y += 10;
+
+                // --- Summen ---
+                const totalsX = 130;
+                const valuesX = 170;
+
+                doc.text("Zwischensumme:", totalsX, y);
+                doc.text(this.formatPrice(o.subtotal), valuesX, y);
+                y += 6;
+
+                if (o.discountVal > 0) {
+                    doc.setTextColor(...accentColor);
+                    doc.text("Rabatt:", totalsX, y);
+                    doc.text(`-${this.formatPrice(o.discountVal)}`, valuesX, y);
+                    doc.setTextColor(0, 0, 0);
+                    y += 6;
+                }
+
+                doc.text("Versand:", totalsX, y);
+                doc.text(this.formatPrice(o.shipping), valuesX, y);
+                y += 10;
+
+                // Gesamtbetrag Box
+                doc.setFillColor(...primaryColor);
+                doc.rect(totalsX - 5, y - 7, 70, 12, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(12);
+                doc.text("Gesamtbetrag:", totalsX, y);
+                doc.text(this.formatPrice(o.total), valuesX, y);
+
+                // --- Footer ---
+                doc.setTextColor(128, 128, 128);
+                doc.setFontSize(9);
+                doc.setFont("helvetica", "normal");
+                const pageHeight = doc.internal.pageSize.height;
+                doc.text("Vielen Dank für deinen Einkauf!", 105, pageHeight - 20, { align: "center" });
+                doc.text("Candyocean GmbH - www.candyocean.de", 105, pageHeight - 15, { align: "center" });
+
+                doc.save(`Rechnung_${o.id}.pdf`);
             },
 
             trackOrder() {

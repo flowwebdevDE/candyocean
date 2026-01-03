@@ -4,6 +4,7 @@ const products = [
         id: 1,
         name: "Regenbogen Lollys",
         price: 4.99,
+        originalPrice: 5.99, // SALE
         category: "Lutscher",
         description: "Handgemachte Lutscher in bunten Farben.",
         image: "https://i.ebayimg.com/images/g/oToAAOSww6NhWoaQ/s-l1200.jpg"
@@ -20,6 +21,7 @@ const products = [
         id: 3,
         name: "Schoko-Trüffel Box",
         price: 12.90,
+        originalPrice: 15.90, // SALE
         category: "Schokolade",
         description: "Feinste Pralinen, gefüllt mit Nougat.",
         image: "https://www.heimgourmet.com/media/schokotruffel-jpg_crop.jpeg/rh/schokotruffel.jpg"
@@ -65,3 +67,17 @@ const products = [
         image: "https://m.media-amazon.com/images/I/61J6y+g+L+L._AC_UF1000,1000_QL80_.jpg"
     }
 ];
+
+// Gültige Gutscheincodes
+const discountCodes = {
+    'CANDYOCEAN2026': { type: 'percent', value: 0.10 }, // 10% Rabatt
+    'HALLOWELT5': { type: 'fixed', value: 5.00 }        // 5€ Rabatt
+};
+
+// Versandkosten berechnen
+function getShippingCost(country) {
+    if (country === 'DE') return 4.99;
+    if (country === 'AT') return 9.99;
+    if (country === 'CH') return 14.99;
+    return 19.99;
+}
