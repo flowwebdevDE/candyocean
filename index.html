@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candyocean</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="mobile.css">
+</head>
+
+<body>
+
+    <!-- PREVIEW LOGIN START (Diesen Block löschen, um den Login zu entfernen) -->
+    <div id="preview-login" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: white; padding: 2rem; border-radius: 16px; box-shadow: var(--shadow); max-width: 400px; width: 100%; text-align: center;">
+            <h2 style="margin-top: 0; color: var(--primary-color);">Preview Zugang 🔒</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-color);">Bitte Passwort eingeben</p>
+            <input type="password" id="preview-pass" placeholder="Passwort" style="margin-bottom: 1rem;" onkeypress="if(event.key==='Enter') app.checkPreviewAccess()">
+            <button onclick="app.checkPreviewAccess()">Eintreten</button>
+            <p id="login-error" style="color: #ef4444; display: none; margin-top: 10px; font-weight: bold;">Falsches Passwort!</p>
+        </div>
+    </div>
+    <!-- PREVIEW LOGIN END -->
+
+    <header>
+        <div class="header-container">
+            <a href="#" class="logo" onclick="app.navigate('home')"><img src="co_logo.jpeg" alt=""></a>
+            <button class="hamburger" onclick="app.toggleMenu()" aria-label="Menü">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <nav id="main-nav">
+                <ul>
+                    <li><a onclick="app.navigate('home')" id="nav-home">Startseite</a></li>
+                    <li><a onclick="app.navigate('shop')" id="nav-shop">Produkte</a></li>
+                    <li><a onclick="app.navigate('contact')" id="nav-contact" style="display: none;">Kontakt</a></li>
+                    <li>
+                        <div class="cart-icon" onclick="app.navigate('cart')">
+                            <!-- SVG Cart Icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                            <span id="cart-count" class="cart-count" style="display:none">0</span>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="hero-banner" style="text-align: center;">
+                <div class="hero-content">
+                <h1>Süße Träume werden wahr</h1>
+                <p style="max-width: 600px; margin: 0 auto 2rem;">
+                    Entdecke handgemachte Bonbons, feinste Schokolade und die besten Leckereien der Welt.
+                </p>
+                <button onclick="app.navigate('shop')" style="width: auto; padding: 1rem 2rem; font-size: 1.1rem;">Jetzt
+                    Naschen</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <h2 style="text-align: center;">Bestseller</h2>
+                <div id="featured-products" class="product-grid">
+                    <!-- Featured products rendered via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Shop Section -->
+        <section id="shop" class="section">
+            <h2>Unsere Produkte</h2>
+            <!-- Search Bar -->
+            <div class="search-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon search-icon-overlay" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" placeholder="Süßigkeiten suchen..." oninput="app.searchProducts(this.value)">
+            </div>
+            
+            <div id="product-list" class="product-grid">
+                <!-- Products rendered via JS -->
+            </div>
+        </section>
+
+        <!-- Cart Section -->
+        <section id="cart" class="section">
+            <h2>Warenkorb</h2>
+            <div id="cart-items"></div>
+            <div class="cart-total" id="cart-total">Gesamt: 0.00 €</div>
+            <div style="text-align: right;">
+                <button onclick="app.checkout()" style="width: auto;">Zur Kasse</button>
+            </div>
+        </section>
+
+        <!-- Checkout Section -->
+        <section id="checkout" class="section">
+            <!-- Background Magic -->
+            <div class="checkout-bg">
+                <div class="orb orb-1"></div>
+                <div class="orb orb-2"></div>
+                <div class="orb orb-3"></div>
+            </div>
+            
+            <div class="checkout-wizard">
+                <div class="wizard-header">
+                    <button onclick="app.navigate('cart')" style="position: absolute; top: 2rem; right: 2rem; background: transparent; border: none; font-size: 2rem; cursor: pointer; color: var(--text-color); width: auto; padding: 0; line-height: 1; z-index: 10;">&times;</button>
+                    <h2 style="margin: 0;">Dein Weg zum Glück ✨</h2>
+                    <div class="wizard-progress">
+                        <div class="progress-bar-fill" id="wizard-progress-bar"></div>
+                    </div>
+                </div>
+                
+                <div class="wizard-content">
+                    <!-- Step 1: Address -->
+                    <div class="wizard-step active" id="step-1">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--primary-color); font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                            Wohin dürfen wir liefern? 
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        </h3>
+                        <form id="checkout-form-step1">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <input type="text" id="input-firstname" placeholder="Vorname" required autocomplete="given-name">
+                                <input type="text" id="input-lastname" placeholder="Nachname" required autocomplete="family-name">
+                            </div>
+                            <div style="position: relative; margin-bottom: 10px;">
+                                <input type="text" id="input-street" placeholder="Straße & Hausnummer" required autocomplete="street-address" style="margin-bottom: 0;">
+                                <div id="street-suggestions" class="autocomplete-suggestions"></div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem;">
+                                <input type="text" id="input-zip" placeholder="PLZ" required autocomplete="postal-code" maxlength="5">
+                                <input type="text" id="input-city" placeholder="Stadt" required autocomplete="address-level2">
+                            </div>
+                            <select id="input-country" required autocomplete="country" style="margin-bottom: 10px;">
+                                <option value="" disabled selected>Land wählen...</option>
+                                <option value="DE">Deutschland (4,99 €)</option>
+                                <option value="AT">Österreich (9,99 €)</option>
+                                <option value="CH">Schweiz (14,99 €)</option>
+                            </select>
+                            <input type="email" id="input-email" placeholder="E-Mail Adresse" required autocomplete="email">
+                        </form>
+                    </div>
+
+                    <!-- Step 2: Payment -->
+                    <div class="wizard-step" id="step-2">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--primary-color); font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                            Wie möchtest du bezahlen?
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                        </h3>
+                        <div class="payment-options">
+                            <label class="payment-card selected" onclick="app.selectPayment(this)">
+                                <input type="radio" name="payment" value="creditcard" checked>
+                                <span class="payment-icon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></span>
+                                <strong>Kreditkarte</strong>
+                            </label>
+                            <label class="payment-card" onclick="app.selectPayment(this)">
+                                <input type="radio" name="payment" value="paypal">
+                                <span class="payment-icon"><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></svg></span>
+                                <strong>PayPal</strong>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Review -->
+                    <div class="wizard-step" id="step-3">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--primary-color); font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                            Alles korrekt?
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+                        </h3>
+                        <div id="checkout-summary-wizard" style="background: rgba(255,255,255,0.5); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.8);"></div>
+                        <div style="text-align: right; font-size: 1.8rem; font-weight: bold; margin-top: 1.5rem; color: var(--accent-color);" id="checkout-total-wizard"></div>
+                    </div>
+                </div>
+
+                <div class="wizard-footer">
+                    <button type="button" class="secondary" id="btn-back" onclick="app.prevStep()" style="width: auto; visibility: hidden; background: transparent; color: #666; border: 1px solid #ddd;">Zurück</button>
+                    <button type="button" id="btn-next" onclick="app.nextStep()" style="width: auto; padding: 1rem 2.5rem; font-size: 1.1rem;">Weiter ➔</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="section">
+            <h2>Kontakt</h2>
+            <div
+                style="max-width: 600px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: var(--shadow);">
+                <form onsubmit="event.preventDefault(); app.showToast('Nachricht gesendet! 💌'); event.target.reset();">
+                    <label>Name</label>
+                    <input type="text" required>
+                    <label>Email</label>
+                    <input type="email" required>
+                    <label>Nachricht</label>
+                    <textarea rows="5" required></textarea>
+                    <button type="submit">Senden</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Success Section -->
+        <section id="success" class="section" style="text-align: center; padding: 4rem 0;">
+            <div style="background: white; padding: 3rem; border-radius: 24px; box-shadow: var(--shadow); display: inline-block; max-width: 500px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                <h2 style="margin-top: 0;">Vielen Dank!</h2>
+                <p>Deine Bestellung wurde erfolgreich simuliert.</p>
+                <p style="background: var(--bg-color); padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 1.2rem; margin: 1.5rem 0;">
+                    Bestellnummer: <span id="order-id" style="color: var(--accent-color); font-weight: bold;">#000000</span>
+                </p>
+                <button onclick="app.navigate('home')" style="width: auto;">Weiter einkaufen</button>
+            </div>
+        </section>
+    </main>
+    
+    <style>
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+    <!-- Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <footer>
+        <p>&copy; 2025 Candyocean. All rights reserved.<br>powered by <a href="https://flowwebdesign.de">Flowwebdesign</a></p>
+        <p style="display: none;">
+            <a href="#" onclick="alert('Impressum Placeholder')">Impressum</a> |
+            <a href="#" onclick="alert('Datenschutz Placeholder')">Datenschutz</a>
+        </p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+
+</html>
