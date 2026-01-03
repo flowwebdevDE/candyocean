@@ -2,6 +2,12 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow-x: hidden;
+            width: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         :root {
             --primary-color: #4a044e;
             --accent-color: #db2777;
@@ -27,6 +33,7 @@
             overflow-x: hidden;
             width: 100%;
             max-width: 100%;
+            position: relative;
             -webkit-text-size-adjust: 100%;
         }
 
@@ -816,7 +823,7 @@
             background: #fff;
             border-color: #db2777;
             box-shadow: 0 10px 30px rgba(219, 39, 119, 0.15);
-            transform: translateY(-2px) scale(1.01);
+            transform: translateY(-2px);
             outline: none;
         }
 
