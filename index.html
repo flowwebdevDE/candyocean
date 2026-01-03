@@ -12,8 +12,8 @@
 <body>
 
     <!-- PREVIEW LOGIN START (Diesen Block löschen, um den Login zu entfernen) -->
-    <div id="preview-login" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: white; padding: 2rem; border-radius: 16px; box-shadow: var(--shadow); max-width: 400px; width: 100%; text-align: center;">
+    <div id="preview-login" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem; box-sizing: border-box;">
+        <div style="background: white; padding: 2rem; border-radius: 16px; box-shadow: var(--shadow); max-width: 400px; width: 100%; text-align: center; box-sizing: border-box;">
             <h2 style="margin-top: 0; color: var(--primary-color);">Preview Zugang 🔒</h2>
             <p style="margin-bottom: 1.5rem; color: var(--text-color);">Bitte Passwort eingeben</p>
             <input type="password" id="preview-pass" placeholder="Passwort" style="margin-bottom: 1rem;" onkeypress="if(event.key==='Enter') app.checkPreviewAccess()">
