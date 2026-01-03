@@ -11,28 +11,28 @@
                 name: "Regenbogen Lollys",
                 price: 4.99,
                 description: "Handgemachte Lutscher in bunten Farben.",
-                image: "https://img.freepik.com/free-vector/sweet-candies-flat-elements-set_1284-34170.jpg?semt=ais_hybrid&w=740&q=80"
+                image: "https://i.ebayimg.com/images/g/oToAAOSww6NhWoaQ/s-l1200.jpg"
             },
             {
                 id: 2,
                 name: "Saure Apfelringe",
                 price: 2.50,
                 description: "Extra sauer und fruchtig im Geschmack.",
-                image: "https://img.freepik.com/free-vector/sweet-candies-flat-elements-set_1284-34170.jpg?semt=ais_hybrid&w=740&q=80"
+                image: "https://suessigkeiten-shop.com/cdn/shop/files/8447_a_43235_931ad9db-5436-4fb1-8585-dbe8fdad45b9.webp?v=1755186082&width=1445"
             },
             {
                 id: 3,
                 name: "Schoko-Trüffel Box",
                 price: 12.90,
                 description: "Feinste Pralinen, gefüllt mit Nougat.",
-                image: "https://img.freepik.com/free-vector/sweet-candies-flat-elements-set_1284-34170.jpg?semt=ais_hybrid&w=740&q=80"
+                image: "https://www.heimgourmet.com/media/schokotruffel-jpg_crop.jpeg/rh/schokotruffel.jpg"
             },
             {
                 id: 4,
                 name: "Gummibärchen Mix",
                 price: 3.99,
                 description: "Der Klassiker in allen Farben und Formen.",
-                image: "https://img.freepik.com/free-vector/sweet-candies-flat-elements-set_1284-34170.jpg?semt=ais_hybrid&w=740&q=80"
+                image: "https://www.grizly.de/fruchtgummi-mix-img-grizly~~mlsani~~mix-ovocneho-zele~~8595678428215_00-fd-3.webp"
             }
         ];
 
