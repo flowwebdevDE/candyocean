@@ -79,6 +79,17 @@
                 <input type="text" placeholder="Süßigkeiten suchen..." oninput="app.searchProducts(this.value)">
             </div>
             
+            <!-- Shop Controls (Categories & Sort) -->
+            <div class="shop-controls">
+                <div id="category-filters" class="category-filters"></div>
+                <select class="sort-select" onchange="app.sortProducts(this.value)">
+                    <option value="default">Sortierung: Standard</option>
+                    <option value="price-asc">Preis: Niedrigster zuerst</option>
+                    <option value="price-desc">Preis: Höchster zuerst</option>
+                    <option value="name-asc">Name: A-Z</option>
+                </select>
+            </div>
+
             <div id="product-list" class="product-grid">
                 <!-- Products rendered via JS -->
             </div>
@@ -86,11 +97,31 @@
 
         <!-- Cart Section -->
         <section id="cart" class="section">
-            <h2>Warenkorb</h2>
-            <div id="cart-items"></div>
-            <div class="cart-total" id="cart-total">Gesamt: 0.00 €</div>
-            <div style="text-align: right;">
-                <button onclick="app.checkout()" style="width: auto;">Zur Kasse</button>
+            <h2>Dein Warenkorb 🛒</h2>
+            <div class="cart-layout">
+                <div id="cart-items-container">
+                    <!-- Items list -->
+                </div>
+                <div id="cart-summary-container" class="cart-summary">
+                    <h3>Zusammenfassung</h3>
+                    <div class="summary-row">
+                        <span>Zwischensumme</span>
+                        <span id="cart-subtotal">0.00 €</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Versand</span>
+                        <span style="font-size: 0.9rem;">(wird im Checkout berechnet)</span>
+                    </div>
+                    <div class="summary-total">
+                        <span>Gesamt</span>
+                        <span id="cart-total-display">0.00 €</span>
+                    </div>
+                    <button onclick="app.checkout()" class="checkout-btn-large">Zur Kasse gehen ➔</button>
+                    <div class="trust-badges">
+                        <span>🔒 Sicher bezahlen</span>
+                        <span>⚡ Schneller Versand</span>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -180,6 +211,28 @@
             </div>
         </section>
 
+        <!-- Tracking Section -->
+        <section id="tracking" class="section">
+            <h2>Lieferstatus 🚚</h2>
+            <div style="background: white; padding: 2rem; border-radius: 24px; box-shadow: var(--shadow); max-width: 800px; margin: 0 auto;">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <p style="color: #666;">Bestellnummer</p>
+                    <h3 id="tracking-order-id" style="font-size: 1.5rem; color: var(--accent-color); margin: 0;">-</h3>
+                </div>
+
+                <div class="tracking-timeline">
+                    <div class="timeline-item active">
+                        <div class="timeline-icon">✅</div>
+                        <div class="timeline-content">
+                            <strong>Bestellung eingegangen</strong>
+                            <small>Wir haben deine Bestellung erhalten.</small>
+                        </div>
+                    </div>
+                    <!-- Weitere Items werden via JS eingefügt -->
+                </div>
+            </div>
+        </section>
+
         <!-- Contact Section -->
         <section id="contact" class="section">
             <h2>Kontakt</h2>
@@ -206,6 +259,7 @@
                 <p style="background: var(--bg-color); padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 1.2rem; margin: 1.5rem 0;">
                     Bestellnummer: <span id="order-id" style="color: var(--accent-color); font-weight: bold;">#000000</span>
                 </p>
+                <button onclick="app.trackOrder()" class="secondary" style="width: auto; margin-right: 10px;">Lieferung verfolgen</button>
                 <button onclick="app.navigate('home')" style="width: auto;">Weiter einkaufen</button>
             </div>
         </section>
@@ -227,6 +281,7 @@
             <a href="#" onclick="alert('Datenschutz Placeholder')">Datenschutz</a>
         </p>
     </footer>
+    <script src="products.js"></script>
     <script src="script.js"></script>
 </body>
 

@@ -4,42 +4,18 @@
             locale: 'de-DE'
         };
 
-        // Hier Produkte bearbeiten/hinzufügen
-        const products = [
-            {
-                id: 1,
-                name: "Regenbogen Lollys",
-                price: 4.99,
-                description: "Handgemachte Lutscher in bunten Farben.",
-                image: "https://i.ebayimg.com/images/g/oToAAOSww6NhWoaQ/s-l1200.jpg"
-            },
-            {
-                id: 2,
-                name: "Saure Apfelringe",
-                price: 2.50,
-                description: "Extra sauer und fruchtig im Geschmack.",
-                image: "https://suessigkeiten-shop.com/cdn/shop/files/8447_a_43235_931ad9db-5436-4fb1-8585-dbe8fdad45b9.webp?v=1755186082&width=1445"
-            },
-            {
-                id: 3,
-                name: "Schoko-Trüffel Box",
-                price: 12.90,
-                description: "Feinste Pralinen, gefüllt mit Nougat.",
-                image: "https://www.heimgourmet.com/media/schokotruffel-jpg_crop.jpeg/rh/schokotruffel.jpg"
-            },
-            {
-                id: 4,
-                name: "Gummibärchen Mix",
-                price: 3.99,
-                description: "Der Klassiker in allen Farben und Formen.",
-                image: "https://www.grizly.de/fruchtgummi-mix-img-grizly~~mlsani~~mix-ovocneho-zele~~8595678428215_00-fd-3.webp"
-            }
-        ];
-
         // --- APP LOGIK ---
         const app = {
             cart: [],
             currentStep: 1,
+            favorites: [],
+            lastOrderId: null,
+            trackingInterval: null,
+            filterState: {
+                category: 'Alle',
+                search: '',
+                sort: 'default'
+            },
 
             checkPreviewAccess() {
                 const pass = document.getElementById('preview-pass').value;
@@ -59,6 +35,12 @@
                     if (loginOverlay) loginOverlay.style.display = 'none';
                 }
 
+                // Load favorites
+                const savedFavs = localStorage.getItem('shopFavorites');
+                if (savedFavs) {
+                    this.favorites = JSON.parse(savedFavs);
+                }
+
                 this.renderProducts();
                 this.updateCartUI();
                 // Load cart from local storage if needed
@@ -69,6 +51,7 @@
                 }
                 this.initAddressAutocomplete();
                 this.initStreetAutocomplete();
+                this.renderCategories();
             },
 
             initAddressAutocomplete() {
@@ -201,24 +184,82 @@
                 const hamburger = document.querySelector('.hamburger');
                 if(hamburger) hamburger.classList.remove('active');
 
+                // Stop tracking interval when leaving page
+                if (this.trackingInterval) clearInterval(this.trackingInterval);
+
                 window.scrollTo(0, 0);
             },
 
+            renderCategories() {
+                const categories = ['Alle', 'Favoriten', ...new Set(products.map(p => p.category))];
+                const container = document.getElementById('category-filters');
+                container.innerHTML = categories.map(cat => 
+                    `<button class="category-btn ${cat === 'Alle' ? 'active' : ''}" onclick="app.filterCategory('${cat}')">${cat}</button>`
+                ).join('');
+            },
+
+            filterCategory(category) {
+                this.filterState.category = category;
+                this.applyFilters();
+            },
+
             searchProducts(query) {
-                const term = query.toLowerCase();
-                const filtered = products.filter(p => 
-                    p.name.toLowerCase().includes(term) || 
-                    p.description.toLowerCase().includes(term)
-                );
-                this.renderProducts(filtered);
+                this.filterState.search = query;
+                this.applyFilters();
+            },
+
+            sortProducts(sortValue) {
+                this.filterState.sort = sortValue;
+                this.applyFilters();
+            },
+
+            applyFilters() {
+                let list = [...products]; // Kopie erstellen
+
+                // 1. Kategorie Filter
+                if (this.filterState.category === 'Favoriten') {
+                    list = list.filter(p => this.favorites.includes(p.id));
+                } else if (this.filterState.category !== 'Alle') {
+                    list = list.filter(p => p.category === this.filterState.category);
+                }
+
+                // 2. Suche Filter
+                if (this.filterState.search) {
+                    const term = this.filterState.search.toLowerCase();
+                    list = list.filter(p => 
+                        p.name.toLowerCase().includes(term) || 
+                        p.description.toLowerCase().includes(term)
+                    );
+                }
+
+                // 3. Sortierung
+                if (this.filterState.sort === 'price-asc') list.sort((a, b) => a.price - b.price);
+                else if (this.filterState.sort === 'price-desc') list.sort((a, b) => b.price - a.price);
+                else if (this.filterState.sort === 'name-asc') list.sort((a, b) => a.name.localeCompare(b.name));
+
+                this.updateFilterUI();
+                this.renderProducts(list);
+            },
+
+            updateFilterUI() {
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.innerText === this.filterState.category);
+                });
             },
 
             renderProducts(list = products) {
                 const container = document.getElementById('product-list');
                 const featuredContainer = document.getElementById('featured-products');
 
-                const createCard = (p, index, context) => `
+                const createCard = (p, index, context) => {
+                    const isFav = this.favorites.includes(p.id);
+                    return `
                 <div class="product-card" style="animation-delay: ${index * 100}ms">
+                    <button class="fav-btn ${isFav ? 'active' : ''}" onclick="app.toggleFavorite(${p.id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </button>
                     <div class="product-img">
                         <img src="${p.image}" alt="${p.name}">
                     </div>
@@ -243,10 +284,24 @@
                     </div>
                 </div>
             `;
+                };
 
                 container.innerHTML = list.map((p, i) => createCard(p, i, 'list')).join('');
                 // Just show first 2 as featured for demo
                 featuredContainer.innerHTML = products.slice(0, 2).map((p, i) => createCard(p, i, 'feat')).join('');
+            },
+
+            toggleFavorite(id) {
+                const index = this.favorites.indexOf(id);
+                if (index === -1) {
+                    this.favorites.push(id);
+                    this.showToast("Zu Favoriten hinzugefügt ❤️");
+                } else {
+                    this.favorites.splice(index, 1);
+                    this.showToast("Aus Favoriten entfernt 💔");
+                }
+                localStorage.setItem('shopFavorites', JSON.stringify(this.favorites));
+                this.applyFilters(); // Re-render to update icons
             },
 
             adjustQty(id, context, delta) {
@@ -305,53 +360,67 @@
             },
 
             updateCartUI() {
-                const cartContainer = document.getElementById('cart-items');
+                const cartItemsContainer = document.getElementById('cart-items-container');
+                const cartSummaryContainer = document.getElementById('cart-summary-container');
                 const countBadge = document.getElementById('cart-count');
-                const totalEl = document.getElementById('cart-total');
+                const subtotalEl = document.getElementById('cart-subtotal');
+                const totalEl = document.getElementById('cart-total-display');
 
                 // Update Count
                 const totalQty = this.cart.reduce((sum, item) => sum + item.qty, 0);
                 countBadge.innerText = totalQty;
                 countBadge.style.display = totalQty > 0 ? 'block' : 'none';
 
-                // Render Items
+                // Empty State
                 if (this.cart.length === 0) {
-                    cartContainer.innerHTML = '<p>Dein Warenkorb ist leer.</p>';
-                    totalEl.innerText = `Gesamt: 0.00 ${config.currency}`;
+                    cartItemsContainer.innerHTML = `
+                        <div class="cart-empty-state">
+                            <div class="cart-empty-icon">🛒</div>
+                            <h3>Dein Warenkorb ist leer</h3>
+                            <p style="color: #666; margin-bottom: 1.5rem;">Sieht aus, als hättest du noch keine Leckereien gefunden.</p>
+                            <button onclick="app.navigate('shop')">Jetzt stöbern</button>
+                        </div>
+                    `;
+                    if(cartSummaryContainer) cartSummaryContainer.style.display = 'none';
+                    cartItemsContainer.style.gridColumn = '1 / -1';
                     return;
                 }
 
+                if(cartSummaryContainer) cartSummaryContainer.style.display = 'block';
+                cartItemsContainer.style.gridColumn = 'auto';
+
                 let total = 0;
-                cartContainer.innerHTML = this.cart.map(item => {
+                cartItemsContainer.innerHTML = this.cart.map(item => {
                     const itemTotal = item.price * item.qty;
                     total += itemTotal;
                     return `
                     <div class="cart-item">
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <img src="${item.image}" alt="${item.name}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                            <img src="${item.image}" alt="${item.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 12px;">
                             <div>
-                                <strong>${item.name}</strong><br>
-                                <small>${item.price.toFixed(2)} ${config.currency}</small>
+                                <strong style="font-size: 1.1rem;">${item.name}</strong><br>
+                                <small style="color: #666;">${item.price.toFixed(2)} ${config.currency} / Stück</small>
                             </div>
                         </div>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <div style="display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                                <button onclick="app.updateCartQty(${item.id}, -1)" style="width: 25px; padding: 0.2rem 0; border-radius: 0; margin: 0; background: #f3f4f6; color: #333; font-size: 0.9rem;">-</button>
-                                <span style="width: 30px; text-align: center; font-size: 0.9rem; background: white; display: inline-block; line-height: 1.5;">${item.qty}</span>
-                                <button onclick="app.updateCartQty(${item.id}, 1)" style="width: 25px; padding: 0.2rem 0; border-radius: 0; margin: 0; background: #f3f4f6; color: #333; font-size: 0.9rem;">+</button>
+                        <div class="cart-controls">
+                            <div class="qty-selector">
+                                <button onclick="app.updateCartQty(${item.id}, -1)">-</button>
+                                <span>${item.qty}</span>
+                                <button onclick="app.updateCartQty(${item.id}, 1)">+</button>
                             </div>
-                            <div style="display:flex; align-items:center; gap:10px; margin-left: auto;">
-                                <span style="font-weight: bold;">${itemTotal.toFixed(2)} ${config.currency}</span>
-                                <button class="danger" onclick="app.removeFromCart(${item.id})" style="padding: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                            <div class="item-total">
+                                <span>${itemTotal.toFixed(2)} ${config.currency}</span>
+                            </div>
+                            <button class="remove-btn" onclick="app.removeFromCart(${item.id})" title="Entfernen">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                </button>
-                            </div>
+                            </button>
                         </div>
                     </div>
                 `;
                 }).join('');
 
-                totalEl.innerText = `Gesamt: ${total.toFixed(2)} ${config.currency}`;
+                if(subtotalEl) subtotalEl.innerText = `${total.toFixed(2)} ${config.currency}`;
+                if(totalEl) totalEl.innerText = `${total.toFixed(2)} ${config.currency}`;
             },
 
             saveCart() {
@@ -475,6 +544,7 @@
                 // Simuliere API Request
                 setTimeout(() => {
                     const orderId = 'ORD-' + Date.now().toString().slice(-6);
+                    this.lastOrderId = orderId;
                     document.getElementById('order-id').innerText = orderId;
                     
                     this.cart = [];
@@ -489,6 +559,57 @@
                     btn.disabled = false;
                     btn.innerText = originalText;
                 }, 2000);
+            },
+
+            trackOrder() {
+                if (!this.lastOrderId) {
+                    this.showToast("Keine aktuelle Bestellung gefunden.", "error");
+                    return;
+                }
+
+                if (this.trackingInterval) clearInterval(this.trackingInterval);
+                
+                document.getElementById('tracking-order-id').innerText = this.lastOrderId;
+                this.navigate('tracking');
+
+                // Simuliere Fortschritt
+                const timeline = document.querySelector('.tracking-timeline');
+                const steps = [
+                    { title: "Bestellung eingegangen", desc: "Wir haben deine Bestellung erhalten.", icon: "✅" },
+                    { title: "Wird verpackt", desc: "Deine Süßigkeiten werden liebevoll zusammengestellt.", icon: "📦" },
+                    { title: "Versandt", desc: "Das Paket ist auf dem Weg zu dir.", icon: "🚚" },
+                    { title: "In Zustellung", desc: "Gleich klingelt es an der Tür!", icon: "🏠" }
+                ];
+
+                let currentStepIndex = 0;
+
+                const renderTimeline = () => {
+                    timeline.innerHTML = steps.map((step, index) => {
+                        const isActive = index <= currentStepIndex;
+                        const isCurrent = index === currentStepIndex;
+                        return `
+                        <div class="timeline-item ${isActive ? 'active' : ''} ${isCurrent ? 'pulse' : ''}">
+                            <div class="timeline-icon">${step.icon}</div>
+                            <div class="timeline-content">
+                                <strong>${step.title}</strong>
+                                <small>${step.desc}</small>
+                            </div>
+                        </div>`;
+                    }).join('');
+                };
+
+                renderTimeline();
+
+                // Automatisches Update alle 3 Sekunden
+                this.trackingInterval = setInterval(() => {
+                    currentStepIndex++;
+                    if (currentStepIndex >= steps.length) {
+                        clearInterval(this.trackingInterval);
+                        this.showToast("Deine Bestellung ist angekommen! 📦", "success");
+                        runConfetti();
+                    }
+                    renderTimeline();
+                }, 3000);
             },
 
             showToast(message, type = 'success') {

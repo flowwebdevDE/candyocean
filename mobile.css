@@ -64,12 +64,15 @@
         justify-content: center;
         align-items: center;
         transform: translateX(100%);
-        transition: transform 0.3s ease-in-out;
+        transition: transform 0.3s ease-in-out, visibility 0s linear 0.3s;
         z-index: 101;
+        visibility: hidden;
     }
 
     nav.active {
         transform: translateX(0);
+        visibility: visible;
+        transition: transform 0.3s ease-in-out, visibility 0s linear 0s;
     }
 
     nav ul {
@@ -88,6 +91,36 @@
     /* Fix für verrutschtes Badge: Container auf Icon-Größe beschränken */
     .cart-icon {
         display: inline-block;
+    }
+
+    /* --- Shop Controls (Search, Filter, Sort) --- */
+    .shop-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .category-filters {
+        display: none;
+        flex-wrap: nowrap; /* Horizontales Scrollen ermöglichen */
+        justify-content: flex-start;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        padding-bottom: 0.5rem;
+        /* Fade-Out Effekt rechts */
+        mask-image: linear-gradient(to right, black 90%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+        
+        /* Scrollbar verstecken */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .category-filters::-webkit-scrollbar { display: none; }
+
+    .category-btn {
+        flex-shrink: 0;
     }
 
     /* --- Rest of previous mobile.css --- */
@@ -119,7 +152,7 @@
         padding-bottom: 0.5rem;
     }
 
-    .cart-item > div:last-child {
+    .cart-controls {
         width: 100%;
         justify-content: space-between;
     }
@@ -149,6 +182,11 @@
     .wizard-header h2 {
         font-size: 1.6rem;
         padding-right: 2rem;
+    }
+
+    /* Prevent Zoom on iOS inputs */
+    input, select, textarea {
+        font-size: 16px !important;
     }
 
     #checkout-form-step1 > div, 
