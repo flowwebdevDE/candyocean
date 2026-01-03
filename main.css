@@ -1,3 +1,7 @@
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         :root {
             --primary-color: #4a044e;
             --accent-color: #db2777;
@@ -19,7 +23,11 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            min-height: 100dvh;
             overflow-x: hidden;
+            width: 100%;
+            max-width: 100%;
+            -webkit-text-size-adjust: 100%;
         }
 
         /* Announcement Bar */
@@ -666,7 +674,8 @@
         /* Checkout Overlay - Full Screen Experience */
         #checkout {
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            top: 0; left: 0; width: 100%; height: 100vh;
+            height: 100dvh;
             z-index: 5000;
             background: #fff; /* Fallback */
             display: none;
