@@ -2,6 +2,11 @@
             box-sizing: border-box;
         }
 
+        html {
+            width: 100%;
+            overflow-x: hidden;
+        }
+
         :root {
             --primary-color: #4a044e;
             --accent-color: #db2777;

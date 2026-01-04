@@ -1,6 +1,6 @@
 /* Mobile Optimizations */
 @media (max-width: 768px) {
-    
+
     /* --- Header & Navigation --- */
     .header-container {
         flex-direction: row;
