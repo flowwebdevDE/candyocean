@@ -227,7 +227,9 @@
                 // Stop tracking interval when leaving page
                 if (this.trackingInterval) clearInterval(this.trackingInterval);
 
-                window.scrollTo(0, 0);
+                // Scroll Reset (für den neuen Body-Scroll-Container)
+                document.body.scrollTop = 0;
+                document.documentElement.scrollTop = 0;
             },
 
             renderCategories() {

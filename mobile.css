@@ -134,6 +134,10 @@
         flex-shrink: 0;
     }
 
+    main {
+        margin-top: 1rem;
+    }
+
     /* --- Rest of previous mobile.css --- */
     .hero-banner {
         padding: 3rem 1.5rem;
