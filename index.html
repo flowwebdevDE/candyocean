@@ -12,13 +12,28 @@
 <body>
 
     <!-- PREVIEW LOGIN START (Diesen Block löschen, um den Login zu entfernen) -->
-    <div id="preview-login" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem; box-sizing: border-box;">
-        <div style="background: white; padding: 2rem; border-radius: 16px; box-shadow: var(--shadow); max-width: 400px; width: 100%; text-align: center; box-sizing: border-box;">
-            <h2 style="margin-top: 0; color: var(--primary-color);">Preview Zugang 🔒</h2>
-            <p style="margin-bottom: 1.5rem; color: var(--text-color);">Bitte Passwort eingeben</p>
-            <input type="password" id="preview-pass" placeholder="Passwort" style="margin-bottom: 1rem;" onkeypress="if(event.key==='Enter') app.checkPreviewAccess()">
-            <button onclick="app.checkPreviewAccess()">Eintreten</button>
-            <p id="login-error" style="color: #ef4444; display: none; margin-top: 10px; font-weight: bold;">Falsches Passwort!</p>
+    <div id="preview-login" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1); background-size: 400% 400%; animation: gradientMove 15s ease infinite; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem; box-sizing: border-box;">
+        <div style="background: white; padding: 3rem 2rem; border-radius: 24px; box-shadow: var(--shadow); max-width: 500px; width: 100%; text-align: center; box-sizing: border-box; animation: fadeIn 1.5s ease-out;">
+            <img src="co_logo.jpeg" alt="Candyocean Logo" style="width: 120px; margin-bottom: 1.5rem; border-radius: 16px; animation: float 6s ease-in-out infinite;">
+            <h1 style="margin-top: 0; color: var(--primary-color); font-size: 2.5rem; margin-bottom: 0.5rem;">Coming Soon 🚀</h1>
+            <p style="margin-bottom: 2rem; color: var(--text-color); font-size: 1.1rem; line-height: 1.5;">
+                Wir arbeiten gerade an den letzten Details für ein süßes Erlebnis.<br>Schau bald wieder vorbei!
+            </p>
+            
+            <form style="display: none;" onsubmit="event.preventDefault(); this.innerHTML='<p style=\'color: var(--accent-color); font-weight: bold;\'>Danke! Du bist dabei. 💌</p>';" style="margin-bottom: 2rem; display: flex; gap: 0.5rem; justify-content: center;">
+                <input type="email" placeholder="Deine E-Mail für Updates" required style="margin-bottom: 0; border-radius: 8px; padding: 0.8rem; border: 1px solid #ddd; width: 60%;">
+                <button type="submit" style="width: auto; border-radius: 8px; padding: 0.8rem 1.2rem;">Anmelden</button>
+            </form>
+
+            <div style="border-top: 1px solid #eee; padding-top: 1.5rem; margin-top: 1rem;">
+                <button id="show-login-btn" onclick="document.getElementById('login-form-container').style.display='block'; this.style.display='none';" style="background: transparent; color: #999; border: 1px solid #eee; padding: 0.5rem 1rem; font-size: 0.8rem; width: auto; cursor: pointer; border-radius: 8px;">🔒 Login</button>
+                <div id="login-form-container" style="display: none; animation: fadeIn 0.5s ease-out;">
+                    <p style="margin-bottom: 1rem; color: #999; font-size: 0.9rem;">Preview Zugang</p>
+                    <input type="password" id="preview-pass" placeholder="Passwort" style="margin-bottom: 1rem;" onkeypress="if(event.key==='Enter') app.checkPreviewAccess()">
+                    <button onclick="app.checkPreviewAccess()">Eintreten</button>
+                    <p id="login-error" style="color: #ef4444; display: none; margin-top: 10px; font-weight: bold;">Falsches Passwort!</p>
+                </div>
+            </div>
         </div>
     </div>
     <!-- PREVIEW LOGIN END -->
@@ -35,7 +50,6 @@
                 <select id="header-country-select" class="nav-country-select" onchange="app.setCountry(this.value)">
                     <option value="DE">🇩🇪 DE</option>
                     <option value="AT">🇦🇹 AT</option>
-                    <option value="CH">🇨🇭 CH</option>
                 </select>
 
                 <div class="cart-icon" onclick="app.navigate('cart')">
@@ -157,7 +171,6 @@
                         <select id="cart-country" onchange="app.setCountry(this.value)" style="width: auto; padding: 0.4rem; margin: 0; font-size: 0.9rem; border-radius: 8px;">
                             <option value="DE">Deutschland</option>
                             <option value="AT">Österreich</option>
-                            <option value="CH">Schweiz</option>
                         </select>
                     </div>
                     
@@ -234,7 +247,6 @@
                                 <option value="" disabled selected>Land wählen...</option>
                                 <option value="DE">Deutschland (4,99 €)</option>
                                 <option value="AT">Österreich (9,99 €)</option>
-                                <option value="CH">Schweiz (14,99 €)</option>
                             </select>
                             <input type="email" id="input-email" placeholder="E-Mail Adresse" required autocomplete="email">
                         </form>
